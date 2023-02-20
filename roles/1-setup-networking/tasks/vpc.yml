@@ -1,0 +1,74 @@
+# Maintainer: Shivam Mudotia (shivam.mudotia@nagarro.com)
+- name: Create VPC
+  ec2_vpc_net:
+    aws_access_key: "{{ aws_access_key }}"
+    aws_secret_key: "{{ aws_secret_key }}"
+    name: "{{ vpc_name }}-vpc" 
+    cidr_block: "{{ vpcCidrBlock }}"
+    region: "{{ region_name }}"
+    dns_support: yes
+    dns_hostnames: yes
+    tenancy: default
+    state: present
+    tags:
+      Name: "{{ vpc_name }}-vpc"
+  register: aws_vpc
+
+- name: Update the newly created VPC to the local variables
+  local_action: lineinfile 
+                path="vars/main.yml"
+                regexp='^vpc_id'
+                line=vpc_id:{{ " " }}'{{ aws_vpc.vpc.id}}'
+  with_items: "{{ aws_vpc.vpc.id}}"
+
+- name: Update the newly created VPC ID in framework-stack/terraform-eks/local.tf file
+  local_action: lineinfile 
+                path="framework-stack/terraform-eks/local.tf"
+                regexp='^  vpc_id'
+                line='  vpc_id = "{{ aws_vpc.vpc.id}}"'
+  with_items: "{{ aws_vpc.vpc.id}}"
+
+- name: Update the region in framework-stack/terraform-eks/ReclaimPv_grafana.yaml file
+  local_action: lineinfile 
+                path="framework-stack/terraform-eks/ReclaimPv_grafana.yaml"
+                regexp='^    topology.kubernetes.io/region:'
+                line='    topology.kubernetes.io/region:{{" "}}"{{ region_name}}'
+  with_items: "{{ aws_vpc.vpc.id}}"
+  
+- name: Update the AZ in framework-stack/terraform-eks/ReclaimPv_grafana.yaml file
+  local_action: lineinfile 
+                path="framework-stack/terraform-eks/ReclaimPv_grafana.yaml"
+                regexp='^    topology.kubernetes.io/zone:'
+                line='    topology.kubernetes.io/zone:{{" "}}"{{ region_name}}a'
+  with_items: "{{ aws_vpc.vpc.id}}"
+
+
+- name: Update the region in framework-stack/terraform-eks/ReclaimPv_influxdb.yaml file
+  local_action: lineinfile 
+                path="framework-stack/terraform-eks/ReclaimPv_influxdb.yaml"
+                regexp='^    topology.kubernetes.io/region:'
+                line='    topology.kubernetes.io/region:{{" "}}{{ region_name}}'
+  with_items: "{{ aws_vpc.vpc.id}}"
+  
+- name: Update the AZ in framework-stack/terraform-eks/ReclaimPv_influxdb.yaml file
+  local_action: lineinfile 
+                path="framework-stack/terraform-eks/ReclaimPv_influxdb.yaml"
+                regexp='^    topology.kubernetes.io/zone:'
+                line='    topology.kubernetes.io/zone:{{" "}}{{ region_name}}a'
+  with_items: "{{ aws_vpc.vpc.id}}"
+
+- name: Update the region in framework-stack/terraform-eks/ReclaimPv_prometheus.yaml file
+  local_action: lineinfile 
+                path="framework-stack/terraform-eks/ReclaimPv_prometheus.yaml"
+                regexp='^    topology.kubernetes.io/region:'
+                line='    topology.kubernetes.io/region:{{" "}}{{ region_name}}'
+  with_items: "{{ aws_vpc.vpc.id}}"
+  
+- name: Update the AZ in framework-stack/terraform-eks/ReclaimPv_prometheus.yaml file
+  local_action: lineinfile 
+                path="framework-stack/terraform-eks/ReclaimPv_prometheus.yaml"
+                regexp='^    topology.kubernetes.io/zone:'
+                line='    topology.kubernetes.io/zone:{{" "}}{{ region_name}}a'
+  with_items: "{{ aws_vpc.vpc.id}}"
+
+

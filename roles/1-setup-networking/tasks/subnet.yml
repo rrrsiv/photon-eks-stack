@@ -1,0 +1,21 @@
+# Maintainer: Shivam Mudotia (shivam.mudotia@nagarro.com)
+---
+# Create Subnet
+- name: Create subnet
+  ec2_vpc_subnet:
+    aws_access_key: "{{ aws_access_key }}"
+    aws_secret_key: "{{ aws_secret_key }}"
+    region: "{{ region_name }}"
+    state: present
+    vpc_id: "{{aws_vpc.vpc.id}}"
+    cidr: "{{ subnet_cidr }}"
+    tags:
+      Name: "{{ vpc_name }}-subnet"
+  register: aws_subnet
+
+- name: Update the newly created Subnet to the local variables
+  local_action: lineinfile 
+                path="vars/main.yml"
+                regexp='^subnet_id'
+                line=subnet_id:{{ " " }}'{{ aws_subnet.subnet.id}}'
+  with_items: "{{ aws_subnet.subnet.id}}"

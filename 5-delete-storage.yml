@@ -1,0 +1,9 @@
+# Maintainer: Shivam Mudotia (shivam.mudotia@nagarro.com)
+# Delete storage components
+- name: "Delete storage components"
+  hosts: local
+  vars_files:
+    - ./vars/main.yml
+  gather_facts: False
+  roles:
+    - role: 5-delete-storage

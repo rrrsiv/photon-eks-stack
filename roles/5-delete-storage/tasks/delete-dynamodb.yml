@@ -1,0 +1,6 @@
+# Maintainer: Shivam Mudotia (shivam.mudotia@nagarro.com)
+- name: Delete dynamo table
+  community.aws.dynamodb_table:
+    name: terraform_state
+    state: absent
+    region: "{{ region_name }}"

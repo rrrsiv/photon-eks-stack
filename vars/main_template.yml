@@ -1,0 +1,31 @@
+# Maintainer: Shivam Mudotia (shivam.mudotia@nagarro.com)
+---
+# vars file for create-ec2-instances
+## Update all the values and rename to main.yml
+aws_access_key: ******************************
+aws_secret_key: ******************************
+client_name: 'dummy'
+region_name: 'us-east-1'
+# Below AMI Id is for ubuntu in us-east-1 region. Update it, if your region is different
+ami_id: 'ami-0149b2da6ceec4bb0'
+key_name: 'perf-testing'
+instance_type: 't2.medium'
+instance_name: 'perf-control-host'
+# Update values of vpc_id and subnet_id if you have pre existing VPC and subnet available
+# For New VPC and Subnet (created by playbook -> 1-setup-networking)
+# values of vpc_id and subnet_id  will be updated automatically when VPC and Subnet are created.
+# s3 bucket name and dynamodb are updated when they are created
+# VPC_ID is also updated for terraform -> framework-stack/terraform-eks/local.tf
+# gateway_id, s3-bucket-name and dynamodb is also updated for terraform -> framework-stack/terraform-eks/backend.tf
+vpc_name: 'perf-testing'
+vpc_id: 'vpc-0532050964a3e485c'
+subnet_id: 'subnet-05a3b75ab3c03ba84'
+# Following will be auto updated. Do NOT change these manually
+s3-bucket-name: 'dummy-perf-testing-t2.medium-perf-control-host'
+dynamodb-table-name: "terraform_state"
+influxdb_volume_id: 'vol-03a615b8e87752f39'
+grafana_volume_id: 'vol-0319ccc9fd2e25053'
+prometheus_volume_id: 'vol-06b5f13bdaaf10656'
+# If you are changing below CIDR ranges, please make sure to change them in framework-stack/terraform-eks/local.tf
+vpcCidrBlock: '10.20.0.0/16'
+subnet_cidr: '10.20.1.0/24'

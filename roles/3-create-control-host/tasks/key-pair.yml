@@ -1,0 +1,15 @@
+# Maintainer: Shivam Mudotia (shivam.mudotia@nagarro.com)
+# If keypar already exists, add the pem file in keys folder
+- name: Create a new EC2 key pair
+  ec2_key:
+    name: "{{ key_name }}"
+    region: "{{ region_name }}"
+    aws_access_key: "{{ aws_access_key }}"
+    aws_secret_key: "{{ aws_secret_key }}"
+  register: ec2_key
+
+- name: Save private key
+  copy: content="{{ ec2_key.key.private_key }}" dest="./keys/{{ key_name }}.pem" mode=0600
+  when: ec2_key.changed
+
+  

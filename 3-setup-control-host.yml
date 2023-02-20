@@ -1,0 +1,84 @@
+# Maintainer: Shivam Mudotia (shivam.mudotia@nagarro.com)
+# Create control-host and Setup tools
+- name: "Create control-host EC2 instance"
+  hosts: local
+  vars_files:
+    - ./vars/main.yml
+  gather_facts: False
+  roles:
+    - role: 3-create-control-host
+
+- name: "Setup tools on control-host EC2 instance"
+  hosts: servers
+  gather_facts: no
+  vars_files:
+    - ./vars/main.yml
+  remote_user: ubuntu
+  tasks:
+      - name: Transfer scripts to the server
+        copy: src=scripts/ dest=/home/ubuntu/scripts mode=0755
+
+      - name: Transfer jenkins jobs to the server
+        copy: src=jenkins_jobs/ dest=/home/ubuntu/jenkins_jobs mode=0755
+
+      - name: Transfer the AWS keypair key
+        copy: src=keys/ dest=/home/ubuntu mode=0400
+
+      - name: Execute the script to install python and ansible
+        command: sh /home/ubuntu/scripts/install_python_ansible.sh
+
+      - name: Execute the script to install awscli
+        command: sh /home/ubuntu/scripts/install_awscli.sh
+
+      - name: Execute the script to install helm
+        command: sh /home/ubuntu/scripts/install_helm.sh
+
+      - name: Execute the script to install kubectl
+        command: sh /home/ubuntu/scripts/install_kubectl.sh
+
+      - name: Execute the script to install terraform
+        command: sh /home/ubuntu/scripts/install_terraform.sh
+
+      - name: Execute the script to install and setup jenkins - THIS TAKES A SHORT WHILE !
+        command: sh /home/ubuntu/scripts/install_jenkins.sh
+
+      - name: Clean scripts and jenkins jobs from server
+        command: rm -rf ~/scripts ~/jenkins_jobs
+
+      - name: Archive the framework stack files locally
+        archive:
+          path: framework-stack/
+          dest: framework-stack.zip
+          format: zip
+        delegate_to: localhost
+        become: false
+
+      - name: Change permissions temporarily
+        command: sudo chmod 777 /var/lib/jenkins
+
+      - name: Transfer the archive to server
+        copy: src=framework-stack.zip dest=/var/lib/jenkins mode=0777
+
+      - name: Remove local archive
+        file: 
+          path: framework-stack.zip 
+          state: absent
+        delegate_to: localhost
+
+      - name: Unzip the archive on server
+        command: sudo -u jenkins unzip -uo /var/lib/jenkins/framework-stack.zip -d /var/lib/jenkins/framework-stack
+
+      - name: Remove the archive from server
+        command: sudo -u jenkins rm /var/lib/jenkins/framework-stack.zip
+
+      - name: Fix permissions
+        command: sudo chmod 755 /var/lib/jenkins
+
+      - name: Execute the script to configure aws key
+        command: sudo -u jenkins aws configure set aws_access_key_id '{{ aws_access_key }}'
+
+      - name: Execute the script to configure aws secret
+        command: sudo -u jenkins aws configure set aws_secret_access_key '{{ aws_secret_key }}'
+
+      - name: Execute the script to configure aws region
+        command: sudo -u jenkins aws configure set region '{{ region_name }}'

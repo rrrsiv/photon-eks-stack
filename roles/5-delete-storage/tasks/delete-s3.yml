@@ -1,0 +1,5 @@
+# Maintainer: Shivam Mudotia (shivam.mudotia@nagarro.com)
+- amazon.aws.s3_bucket:
+    name: "{{client_name}}-{{ key_name }}-{{ instance_type }}-{{ instance_name }}"
+    state: absent
+    force: true

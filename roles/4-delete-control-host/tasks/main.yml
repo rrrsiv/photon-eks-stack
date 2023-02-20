@@ -1,0 +1,11 @@
+# Maintainer: Shivam Mudotia (shivam.mudotia@nagarro.com)
+---
+# tasks file for terminate-ec2-instances
+
+- name: Terminate control-host
+  block:
+    - import_tasks: delete-ec2.yml
+    - import_tasks: delete-security-group.yml
+    - meta: refresh_inventory
+    - pause:
+        seconds: 15

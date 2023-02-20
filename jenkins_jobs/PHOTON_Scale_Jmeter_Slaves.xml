@@ -1,0 +1,67 @@
+<?xml version='1.1' encoding='UTF-8'?>
+<flow-definition plugin="workflow-job@1268.v6eb_e2ee1a_85a">
+  <actions>
+    <org.jenkinsci.plugins.pipeline.modeldefinition.actions.DeclarativeJobAction plugin="pipeline-model-definition@2.2118.v31fd5b_9944b_5"/>
+    <org.jenkinsci.plugins.pipeline.modeldefinition.actions.DeclarativeJobPropertyTrackerAction plugin="pipeline-model-definition@2.2118.v31fd5b_9944b_5">
+      <jobProperties/>
+      <triggers/>
+      <parameters/>
+      <options/>
+    </org.jenkinsci.plugins.pipeline.modeldefinition.actions.DeclarativeJobPropertyTrackerAction>
+  </actions>
+  <description>PHOTON_Scale_Jmeter_Slaves</description>
+  <keepDependencies>false</keepDependencies>
+  <properties>
+    <org.jenkinsci.plugins.workflow.job.properties.DisableResumeJobProperty/>
+    <hudson.model.ParametersDefinitionProperty>
+      <parameterDefinitions>
+        <hudson.model.StringParameterDefinition>
+          <name>Jmeter_Slave_Pods_Count</name>
+          <defaultValue>1</defaultValue>
+          <trim>false</trim>
+        </hudson.model.StringParameterDefinition>
+      </parameterDefinitions>
+    </hudson.model.ParametersDefinitionProperty>
+  </properties>
+  <definition class="org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition" plugin="workflow-cps@3606.v0b_d8b_e512dcf">
+    <script>pipeline {
+    agent any
+    stages {
+        stage(&apos;PHOTON_Scale_Jmeter_Slaves&apos;)
+        {
+            steps {
+                //echo &apos;starting job time : $(date)&apos;
+                      script{
+                            sh &apos;&apos;&apos;
+                            echo &quot;Starting the Scaling&quot;
+                            cd /var/lib/jenkins/framework-stack
+                            helm upgrade jmeter jmeter/ --set server.replicaCount=${Jmeter_Slave_Pods_Count}
+                            while [ ${Jmeter_Slave_Pods_Count} != $(kubectl get pods | grep jmeter-server | grep -i running | wc -l) ]
+                            do
+                                echo &quot;Still Scaling&quot;
+                                sleep 10
+                            done
+                            sleep 10
+                            echo &quot;Scaling Completed&quot;
+                            &apos;&apos;&apos;
+                            }
+                    }
+        }
+    }
+
+    post {
+        aborted {
+            echo &quot;Build was aborted&quot;
+            }
+            failure{
+                echo &apos;Please Restart this job...&apos;
+            }
+        }
+}
+
+</script>
+    <sandbox>true</sandbox>
+  </definition>
+  <triggers/>
+  <disabled>false</disabled>
+</flow-definition>

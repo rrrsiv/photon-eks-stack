@@ -1,0 +1,8 @@
+# Maintainer: Shivam Mudotia (shivam.mudotia@nagarro.com)
+galaxy_info:
+  author: Shivam Mudotia
+  description: Architect
+  company: Nagarro Software Pvt Ltd.
+  min_ansible_version: 2.1
+  galaxy_tags: []
+dependencies: []

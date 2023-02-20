@@ -1,0 +1,13 @@
+# Maintainer: Shivam Mudotia (shivam.mudotia@nagarro.com)
+---
+# Delete Security Group
+- name: Delete Security Group
+  ec2_group:
+    name: "{{ instance_name }}-sg"
+    vpc_id: "{{ vpc_id }}"
+    region: "{{ region_name }}"
+    aws_access_key: "{{ aws_access_key }}"
+    aws_secret_key: "{{ aws_secret_key }}"
+    state: absent
+  
+

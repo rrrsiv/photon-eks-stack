@@ -1,0 +1,5 @@
+vars/main.yml
+keys/*.pem
+inventory/ec2
+**.terraform/*
+

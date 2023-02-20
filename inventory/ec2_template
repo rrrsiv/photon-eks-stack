@@ -1,0 +1,4 @@
+# Maintainer: Shivam Mudotia (shivam.mudotia@nagarro.com)
+# Rename this to ec2 while running fresh installation. Do NOT delete the empty line under [servers]. Its kept on purpose.
+# DUMMY ENTRY -> 3.239.25.27 ansible_user=ubuntu ansible_ssh_private_key_file=keys/perf-testing.pem ansible_ssh_extra_args='-o StrictHostKeyChecking=no'
+[servers]

@@ -1,0 +1,13 @@
+# Maintainer: Shivam Mudotia (shivam.mudotia@nagarro.com)
+---
+# tasks file for remove-networking
+- name: "Delete Networking components"
+  block:
+    - import_tasks: delete-public_route.yml
+    - import_tasks: delete-subnet.yml
+    - import_tasks: delete-igw.yml
+    - import_tasks: delete-vpc.yml
+    - meta: refresh_inventory
+    - pause:
+        seconds: 5
+

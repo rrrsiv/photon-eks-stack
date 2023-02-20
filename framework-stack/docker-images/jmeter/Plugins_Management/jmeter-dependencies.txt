@@ -1,0 +1,17 @@
+https://jmeter-plugins.org/files/packages/jpgc-redis-0.5.zip
+https://jmeter-plugins.org/files/packages/jpgc-casutg-2.10.zip
+https://jmeter-plugins.org/files/packages/jpgc-functions-2.1.zip
+https://jmeter-plugins.org/files/packages/jpgc-ffw-2.0.zip
+https://jmeter-plugins.org/files/packages/jpgc-tst-2.5.zip
+https://jmeter-plugins.org/files/packages/jpgc-cmd-2.2.zip
+https://jmeter-plugins.org/files/packages/jpgc-synthesis-2.2.zip
+https://jmeter-plugins.org/files/packages/jpgc-casutg-2.9.zip
+https://jmeter-plugins.org/files/packages/jpgc-functions-2.1.zip
+https://jmeter-plugins.org/files/packages/jpgc-tst-2.5.zip
+https://jmeter-plugins.org/files/packages/jpgc-perfmon-2.1.zip
+https://jmeter-plugins.org/files/packages/jpgc-fifo-0.2.zip
+https://jmeter-plugins.org/files/packages/jpgc-dummy-0.4.zip
+https://jmeter-plugins.org/files/packages/bzm-parallel-0.9.zip
+https://jmeter-plugins.org/files/packages/websocket-samplers-1.2.8.zip
+https://jmeter-plugins.org/files/packages/websocket-sampler-1.0.2-SNAPSHOT.zip
+

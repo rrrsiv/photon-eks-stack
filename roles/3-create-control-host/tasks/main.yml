@@ -1,0 +1,13 @@
+# Maintainer: Shivam Mudotia (shivam.mudotia@nagarro.com)
+---
+# tasks file for create-ec2-instances
+
+- name: Create control-host
+  block:
+    - import_tasks: key-pair.yml
+    - import_tasks: security-group.yml
+    - import_tasks: ec2.yml
+    - meta: refresh_inventory
+    - pause:
+        seconds: 30
+

@@ -1,0 +1,14 @@
+# Maintainer: Shivam Mudotia (shivam.mudotia@nagarro.com)
+---
+# tasks file for setup-networking
+
+- name: "Create Networking components"
+  block:
+    - import_tasks: vpc.yml
+    - import_tasks: igw.yml
+    - import_tasks: subnet.yml
+    - import_tasks: public_route.yml
+    - meta: refresh_inventory
+    - pause:
+        seconds: 2
+

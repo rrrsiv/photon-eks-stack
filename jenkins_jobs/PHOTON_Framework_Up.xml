@@ -1,0 +1,73 @@
+<?xml version='1.1' encoding='UTF-8'?>
+<flow-definition plugin="workflow-job@1254.v3f64639b_11dd">
+  <actions>
+    <org.jenkinsci.plugins.pipeline.modeldefinition.actions.DeclarativeJobAction plugin="pipeline-model-definition@2.2118.v31fd5b_9944b_5"/>
+    <org.jenkinsci.plugins.pipeline.modeldefinition.actions.DeclarativeJobPropertyTrackerAction plugin="pipeline-model-definition@2.2118.v31fd5b_9944b_5">
+      <jobProperties/>
+      <triggers/>
+      <parameters/>
+      <options/>
+    </org.jenkinsci.plugins.pipeline.modeldefinition.actions.DeclarativeJobPropertyTrackerAction>
+  </actions>
+  <description></description>
+  <keepDependencies>false</keepDependencies>
+  <properties>
+    <org.jenkinsci.plugins.workflow.job.properties.DisableResumeJobProperty/>
+  </properties>
+  <definition class="org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition" plugin="workflow-cps@3601.v9b_36a_d99e1cc">
+    <script>pipeline {
+    agent any
+    stages {
+        stage('PHOTON_Framework_Up') {
+            steps {
+                //echo &apos;starting job time : $(date)&apos;
+                sh '''
+                cd /var/lib/jenkins/framework-stack/terraform-eks
+                terraform init || true
+                terraform init -reconfigure || true
+                terraform plan
+                terraform apply -auto-approve
+                # update kubeconfig
+                aws eks --region us-east-1 update-kubeconfig --name perf-test_photon_eks_cluster || true
+                kubectl cluster-info
+                kubectl apply -f karpenter-provisioner.yaml
+                kubectl apply -f ReclaimPv_grafana.yaml
+                kubectl apply -f ReclaimPv_influxdb.yaml
+                kubectl apply -f ReclaimPv_prometheus.yaml
+                cd /var/lib/jenkins/framework-stack
+                helm install jmeter jmeter/ || true
+                helm install influxdb influxdb/ || true
+                helm install prometheus prometheus/ || true
+                sleep 30
+                helm install grafana grafana/ || true
+                sleep 120
+                export GRAFANA_NAME=$(kubectl get pods -l app.kubernetes.io/name=grafana -o jsonpath='{.items[*].metadata.name}')
+                kubectl cp grafana/setupGrafana.sh $GRAFANA_NAME:/tmp/setupGrafana.sh
+                kubectl exec -it $GRAFANA_NAME -- chmod 755 /tmp/setupGrafana.sh
+                kubectl exec -it $GRAFANA_NAME -- sh /tmp/setupGrafana.sh
+                sleep 30
+                kubectl get svc --namespace default grafana | awk '{print $4}' | tail -n+2
+                kubectl get secret --namespace default grafana -o jsonpath='{.data.admin-password}' | base64 --decode ; echo
+                '''
+            }
+        }
+    }
+
+    post {
+        aborted {
+            //build('PHOTON_Framework_Down');
+            echo 'Build was aborted'
+            }
+            failure{
+                //build('PHOTON_Framework_Down');
+                echo 'Please Restart this job...'
+            }
+        }
+}
+
+</script>
+    <sandbox>true</sandbox>
+  </definition>
+  <triggers/>
+  <disabled>false</disabled>
+</flow-definition>

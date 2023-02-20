@@ -1,0 +1,12 @@
+# Maintainer: Shivam Mudotia (shivam.mudotia@nagarro.com)
+# Delete Subnet
+- name: Delete subnet
+  ec2_vpc_subnet:
+    aws_access_key: "{{ aws_access_key }}"
+    aws_secret_key: "{{ aws_secret_key }}"
+    region: "{{ region_name }}"
+    state: absent
+    vpc_id: "{{ vpc_id }}"
+    cidr: "{{ subnet_cidr }}"
+
+

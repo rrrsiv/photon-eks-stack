@@ -1,0 +1,9 @@
+# Maintainer: Shivam Mudotia (shivam.mudotia@nagarro.com)
+# Create storage components
+- name: "Create storage components"
+  hosts: local
+  vars_files:
+    - ./vars/main.yml
+  gather_facts: False
+  roles:
+    - role: 2-setup-storage

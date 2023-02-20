@@ -1,0 +1,21 @@
+# Maintainer: Shivam Mudotia (shivam.mudotia@nagarro.com)
+- name: Fetch ec2 VPC public subnet route table
+  ec2_vpc_route_table_info:
+    aws_access_key: "{{ aws_access_key }}"
+    aws_secret_key: "{{ aws_secret_key }}"
+    region: "{{ region_name }}"
+    filters:
+      "tag:Name": "{{ vpc_name }}-rt"
+  register: public_rt
+
+- name: delete ec2 VPC public subnet route table
+  ec2_vpc_route_table:
+    aws_access_key: "{{ aws_access_key }}"
+    aws_secret_key: "{{ aws_secret_key }}"
+    region: "{{ region_name }}"
+    vpc_id: "{{ vpc_id }}"
+    state: absent
+    lookup: id
+    route_table_id: "{{ public_rt.route_tables[0].id}}"
+  with_items:
+    - "{{ public_rt.route_tables[0].id | default([])}}"

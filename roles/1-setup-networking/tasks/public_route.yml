@@ -1,0 +1,16 @@
+# Maintainer: Shivam Mudotia (shivam.mudotia@nagarro.com)
+- name: create ec2 VPC public subnet route table
+  ec2_vpc_route_table:
+    aws_access_key: "{{ aws_access_key }}"
+    aws_secret_key: "{{ aws_secret_key }}"
+    vpc_id: "{{ aws_vpc.vpc.id }}"
+    region: "{{ region_name }}"
+    state: present
+    tags:
+      Name: "{{ vpc_name }}-rt"
+    subnets: [ "{{ aws_subnet.subnet.id }}" ]   
+    # create routes
+    routes:
+      - dest: "0.0.0.0/0" 
+        gateway_id: "{{ aws_igw.gateway_id }}"
+  register: public_rt

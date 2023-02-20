@@ -1,0 +1,12 @@
+# Maintainer: Shivam Mudotia (shivam.mudotia@nagarro.com)
+---
+# tasks file for setup storage
+
+- name: "Create Storage components"
+  block:
+    - import_tasks: delete-s3.yml
+    - import_tasks: delete-dynamodb.yml
+    - import_tasks: delete-ebs_volumes.yml
+    - meta: refresh_inventory
+    - pause:
+        seconds: 10

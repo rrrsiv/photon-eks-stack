@@ -1,0 +1,27 @@
+- name: Create EBS Volume for InfluxDB
+  amazon.aws.ec2_vol:
+    volume_size: 8
+    volume_type: gp2
+    name: "perf-test_photon-influxdb"
+    zone: "{{ region_name }}b"
+    region: "{{ region_name }}"
+    tags:
+      kubernetes.io/cluster/perf-test_photon_eks_cluster:	"owned"
+      kubernetes.io/created-for/pvc/namespace: "default"
+      KubernetesCluster: "perf-test_photon_eks_cluster"
+      ebs.csi.aws.com/cluster: "true"
+  register: aws_ec2volume_influxdb
+
+- name: Update the newly created influxdb volume ID to the local variables
+  local_action: lineinfile 
+                path="vars/main.yml"
+                regexp='^influxdb_volume_id'
+                line=influxdb_volume_id:{{ " " }}'{{ aws_ec2volume_influxdb.volume_id }}'
+  with_items: "{{ aws_ec2volume_influxdb.volume_id }}"
+
+- name: Update the newly created influxdb volume ID in framework-stack/terraform-eks/ReclaimPv_influxdb.yaml file
+  local_action: lineinfile 
+                path="framework-stack/terraform-eks/ReclaimPv_influxdb.yaml"
+                regexp='^    volumeID'
+                line='    volumeID:{{ " " }}{{  aws_ec2volume_influxdb.volume_id}}'
+  with_items: "{{  aws_ec2volume_influxdb.volume_id }}"

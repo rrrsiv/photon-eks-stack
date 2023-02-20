@@ -1,0 +1,22 @@
+# Maintainer: Shivam Mudotia (shivam.mudotia@nagarro.com)
+- name: Delete Grafana EBS Volume
+  amazon.aws.ec2_vol:
+    zone: "{{ region_name }}a"
+    region: "{{ region_name }}"
+    state: absent
+    name: perf-test_photon-grafana
+
+- name: Delete InfluxDB EBS Volume
+  amazon.aws.ec2_vol:
+    zone: "{{ region_name }}a"
+    region: "{{ region_name }}"
+    state: absent
+    name: perf-test_photon-influxdb
+
+- name: Delete Prometheus EBS Volume
+  amazon.aws.ec2_vol:
+    zone: "{{ region_name }}a"
+    region: "{{ region_name }}"
+    state: absent
+    name: perf-test_photon-prometheus
+

@@ -1,0 +1,29 @@
+- name: Create EBS Volume for Grafana
+  amazon.aws.ec2_vol:
+    volume_size: 10
+    volume_type: gp2
+    name: "perf-test_photon-grafana"
+    zone: "{{ region_name }}a"
+    region: "{{ region_name }}"
+    tags:
+      kubernetes.io/cluster/perf-test_photon_eks_cluster:	"owned"
+      kubernetes.io/created-for/pvc/namespace: "default"
+      KubernetesCluster: "perf-test_photon_eks_cluster"
+      ebs.csi.aws.com/cluster: "true"
+
+  register: aws_ec2volume_grafana
+
+- name: Update the newly created grafana_volume_id to the local variables
+  local_action: lineinfile 
+                path="vars/main.yml"
+                regexp='^grafana_volume_id'
+                line=grafana_volume_id:{{ " " }}'{{ aws_ec2volume_grafana.volume_id }}'
+  with_items: "{{ aws_ec2volume_grafana.volume_id }}"
+
+- name: Update the newly created grafana_volume_id in framework-stack/terraform-eks/ReclaimPv_grafana.yaml file
+  local_action: lineinfile 
+                path="framework-stack/terraform-eks/ReclaimPv_grafana.yaml"
+                regexp='^    volumeID'
+                line='    volumeID:{{ " " }}{{ aws_ec2volume_grafana.volume_id }}'
+  with_items: "{{ aws_ec2volume_grafana.volume_id }}"
+

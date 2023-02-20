@@ -1,0 +1,23 @@
+# Maintainer: Shivam Mudotia (shivam.mudotia@nagarro.com)
+- amazon.aws.s3_bucket:
+    name: "{{client_name}}-{{ key_name }}-{{ instance_type }}-{{ instance_name }}"
+    state: present
+    versioning: true
+    encryption: "AES256"
+    tags:
+      Name: "{{key_name}}-s3-bucket"
+  register: aws_s3
+
+- name: Update the newly created s3 bucket to the local variables
+  local_action: lineinfile 
+                path="vars/main.yml"
+                regexp='^s3-bucket-name'
+                line=s3-bucket-name:{{ " " }}'{{ aws_s3.name }}'
+  with_items: "{{ aws_s3.name }}"
+
+- name: Update the newly created s3 in framework-stack/terraform-eks/backend.tf file
+  local_action: lineinfile 
+                path="framework-stack/terraform-eks/backend.tf"
+                regexp='^    bucket'
+                line='    bucket         = "{{ aws_s3.name }}"'
+  with_items: "{{ aws_s3.name }}"

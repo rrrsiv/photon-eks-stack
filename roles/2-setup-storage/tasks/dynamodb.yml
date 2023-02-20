@@ -1,0 +1,28 @@
+# Maintainer: Shivam Mudotia (shivam.mudotia@nagarro.com)
+- name: Create dynamo table with hash and range primary key
+  community.aws.dynamodb_table:
+    name: terraform_state
+    state: present
+    region: "{{ region_name }}"
+    hash_key_name: "LockID"
+    read_capacity: 5
+    write_capacity: 5
+    tags:
+      tag_name: "{{vpc_name}}-terraform_state"
+  register: aws_dynamodb
+
+# - name: Update the newly created dynamodb to the local variables
+#   local_action: lineinfile 
+#                 path="vars/main.yml"
+#                 regexp='^dynamodb-table-name'
+#                 line=dynamodb-table-name:{{ " " }}'{{ aws_dynamodb.name }}'
+#   with_items: "{{ aws_dynamodb.name }}"
+
+# - name: Update the newly created dynamodb in framework-stack/terraform-eks/local.tf file
+#   local_action: lineinfile 
+#                 path="framework-stack/terraform-eks/local.tf"
+#                 regexp='^  dynamodb-table-name'
+#                 line='  dynamodb-table-name = "{{ aws_dynamodb.name }}"'
+#   with_items: "{{ aws_dynamodb.name }}"
+
+

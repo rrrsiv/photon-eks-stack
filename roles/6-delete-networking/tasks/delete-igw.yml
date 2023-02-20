@@ -1,0 +1,8 @@
+# Maintainer: Shivam Mudotia (shivam.mudotia@nagarro.com)
+- name: delete vpc internet gateway       
+  ec2_vpc_igw:
+    aws_access_key: "{{ aws_access_key }}"
+    aws_secret_key: "{{ aws_secret_key }}"
+    region: "{{ region_name }}"
+    vpc_id: "{{ vpc_id}}"
+    state: absent

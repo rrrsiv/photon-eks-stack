@@ -1,0 +1,39 @@
+# Maintainer: Shivam Mudotia (shivam.mudotia@nagarro.com)
+---
+# Create Security Group and save the output into security_group
+- name: Create Security Group
+  ec2_group:
+    name: "{{ instance_name }}-sg"
+    description: "Security Group for {{ instance_name }}"
+    vpc_id: "{{ vpc_id }}"
+    region: "{{ region_name }}"
+    aws_access_key: "{{ aws_access_key }}"
+    aws_secret_key: "{{ aws_secret_key }}"
+    rules:
+      - proto: tcp
+        ports:
+          - 22
+        cidr_ip: "0.0.0.0/0"
+        rule_desc: "allow port from Everywhere"
+      
+      - proto: tcp
+        ports:
+          - 8080
+        cidr_ip: "0.0.0.0/0"
+        rule_desc: "allow port from Everywhere"
+      
+      - proto: tcp
+        ports:
+          - 80
+        cidr_ip: "0.0.0.0/0"
+        rule_desc: "allow port from Everywhere"    
+  register: aws_sg
+
+- name: Tag Security Group
+  ec2_tag:
+    resource: "{{aws_sg.group_id}}"
+    region: "{{ region_name }}"
+    aws_access_key: "{{ aws_access_key }}"
+    aws_secret_key: "{{ aws_secret_key }}"
+    tags:
+      Name: "{{ instance_name }}-sg"

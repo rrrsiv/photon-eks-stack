@@ -1,0 +1,316 @@
+<?xml version='1.1' encoding='UTF-8'?>
+<flow-definition plugin="workflow-job@1268.v6eb_e2ee1a_85a">
+  <actions>
+    <org.jenkinsci.plugins.pipeline.modeldefinition.actions.DeclarativeJobAction plugin="pipeline-model-definition@2.2118.v31fd5b_9944b_5"/>
+    <org.jenkinsci.plugins.pipeline.modeldefinition.actions.DeclarativeJobPropertyTrackerAction plugin="pipeline-model-definition@2.2118.v31fd5b_9944b_5">
+      <jobProperties/>
+      <triggers/>
+      <parameters/>
+      <options/>
+    </org.jenkinsci.plugins.pipeline.modeldefinition.actions.DeclarativeJobPropertyTrackerAction>
+  </actions>
+  <description>This Pipeline includes :-&#xd;
+1) Uploading of CSV File to Redis.&#xd;
+2) Execution of JMeter tests.&#xd;
+3) Execution of Locust tests.&#xd;
+4) Scaling required number of JMeter slaves pods</description>
+  <keepDependencies>false</keepDependencies>
+  <properties>
+    <org.jenkinsci.plugins.workflow.job.properties.DisableResumeJobProperty/>
+    <hudson.model.ParametersDefinitionProperty>
+      <parameterDefinitions>
+        <hudson.model.StringParameterDefinition>
+          <name>Jmeter_Slave_Pods_Count</name>
+          <description>Please enter the no of pods required for running test (1 pod = 4GB RAM and 2 vCPUs).</description>
+          <defaultValue>1</defaultValue>
+          <trim>true</trim>
+        </hudson.model.StringParameterDefinition>
+        <io.jenkins.plugins.file__parameters.StashedFileParameterDefinition plugin="file-parameters@264.v1733d9b_2a_380">
+          <name>Script</name>
+          <description>Please Upload your test script.zip file.</description>
+        </io.jenkins.plugins.file__parameters.StashedFileParameterDefinition>
+        <hudson.model.StringParameterDefinition>
+          <name>Locust_Runtime</name>
+          <description>This parameter is used for locust test execution and should be given in seconds only. Example : 10</description>
+          <defaultValue>10</defaultValue>
+          <trim>false</trim>
+        </hudson.model.StringParameterDefinition>
+        <hudson.model.StringParameterDefinition>
+          <name>Locust_Users</name>
+          <description>This parameter is used for locust test execution. Example : 1</description>
+          <defaultValue>1</defaultValue>
+          <trim>false</trim>
+        </hudson.model.StringParameterDefinition>
+        <hudson.model.StringParameterDefinition>
+          <name>Locust_Spawn_Rate</name>
+          <description>This parameter is used for locust test execution. Example : 2</description>
+          <defaultValue>2</defaultValue>
+          <trim>false</trim>
+        </hudson.model.StringParameterDefinition>
+        <com.cwctravel.hudson.plugins.extended__choice__parameter.ExtendedChoiceParameterDefinition plugin="extended-choice-parameter@359.v35dcfdd0c20d">
+          <name>TestData</name>
+          <description>Select &quot;Yes&quot; to upload csv test data files in zip format or &quot;No&quot; to skip uploading csv file.</description>
+          <quoteValue>false</quoteValue>
+          <saveJSONParameterToFile>false</saveJSONParameterToFile>
+          <visibleItemCount>2</visibleItemCount>
+          <type>PT_RADIO</type>
+          <value>Yes,No</value>
+          <defaultValue>No</defaultValue>
+          <multiSelectDelimiter>,</multiSelectDelimiter>
+        </com.cwctravel.hudson.plugins.extended__choice__parameter.ExtendedChoiceParameterDefinition>
+        <io.jenkins.plugins.file__parameters.StashedFileParameterDefinition plugin="file-parameters@264.v1733d9b_2a_380">
+          <name>CSV_Files</name>
+        </io.jenkins.plugins.file__parameters.StashedFileParameterDefinition>
+      </parameterDefinitions>
+    </hudson.model.ParametersDefinitionProperty>
+  </properties>
+  <definition class="org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition" plugin="workflow-cps@3606.v0b_d8b_e512dcf">
+    <script>pipeline {
+    agent any
+    stages{
+
+
+        // stage(&apos;Scale Jmeter Slaves&apos;) {
+        //     steps {
+        //         build job: &apos;PHOTON_Scale_Jmeter_Slaves&apos;, parameters: [
+        //             string(name: &apos;Jmeter_Slave_Pods_Count&apos;, value: &apos;${Jmeter_Slave_Pods_Count}&apos;)
+        //         ]
+        //     }
+        // }
+
+        stage(&apos;PHOTON_Scale_Jmeter_Slaves&apos;)
+        {
+            steps {
+                //echo &apos;starting job time : $(date)&apos;
+                      script{
+                            sh &apos;&apos;&apos;
+                            echo &quot;Starting the Scaling&quot;
+                            cd /var/lib/jenkins/framework-stack
+                            helm upgrade jmeter jmeter/ --set server.replicaCount=${Jmeter_Slave_Pods_Count}
+                            while [ ${Jmeter_Slave_Pods_Count} != $(kubectl get pods | grep jmeter-server | grep -i running | wc -l) ]
+                            do
+                            echo &quot;Still Scaling&quot;
+                            sleep 10
+                            done
+                            sleep 10
+                            echo &quot;Scaling Completed&quot;
+                            &apos;&apos;&apos;
+                            }
+                    }
+        }
+
+
+
+    /* stage(&apos;Uploading CSV Files&apos;) {
+        steps{
+            script{
+                def choiceCSV = &quot;${params.TestData}&quot;;
+                if(choiceCSV==&quot;Yes&quot;){
+
+                //def inputCSVPath = input message: &apos;Upload CSV_Files.zip &apos;, parameters: [stashedFile(&apos;CSV_Files&apos;)]
+                unstash &apos;CSV_Files&apos;
+                //sh &quot;pwd&quot;
+                sh &quot;chmod -R 777 ./PHOTON_Setup&quot;
+
+                sh &quot;cp -f ./CSV_Files /res/photon/Redis_Docker_Volume/CSV_Files.zip&quot;
+                sh &apos;&apos;&apos;
+                cd ./PHOTON_Setup/
+                #docker-compose up -d redis
+                docker service scale Photon_Stack_redis=1 &gt; /dev/null
+                cd ..
+
+                # Copying Push_CSV_To_Redis.sh file
+                cp -f ./PHOTON_Setup/RedisForCSV/data/Push_CSV_To_Redis.sh /res/photon/Redis_Docker_Volume/
+
+
+                cd /res/photon/Redis_Docker_Volume/
+
+                # Extracting CSV Files
+                for z in *.zip; do unzip -o \$z; rm \$z; done
+
+                #chmod -R 777 /tmp/ninja/Redis_Docker_Volume
+
+                # Getting name of redis container
+                redis_container_name=`docker ps|grep Photon_Stack_redis|awk &apos;{ print $NF }&apos;`
+
+                # Flushing old data in csv
+                docker exec $redis_container_name redis-cli FLUSHALL
+
+                #  /r replacement in csv file text content
+                for name in *.csv; do sed -i &apos;s/\\r\$//g&apos; \$name; done
+
+                # Uploading To Redis
+                for csv in *.csv; do docker exec ${redis_container_name} sh Push_CSV_To_Redis.sh \$csv; rm \$csv; done
+
+                &apos;&apos;&apos;
+                }
+
+                else {
+
+                    echo &quot;No Csv File have been uploaded&quot;
+                }
+            }
+
+            }
+        }
+        */
+        stage(&apos;Executing Test&apos;) {
+            steps{
+                script{
+                    // script to run jmeter test
+                    sh &apos;&apos;&apos;
+                    echo &quot;Present working directory : $(pwd)&quot;
+                    &apos;&apos;&apos;
+                    unstash &apos;Script&apos;
+                    sh &quot;chmod +x Script&quot;
+                    sh &quot;cp -f ./Script ./JMeter_Scripts.zip&quot;
+
+                    // unzip and checking file for extension
+                    sh &quot;unzip -o ./JMeter_Scripts.zip -d ./JMeter_Scripts/&quot;
+
+                    echo &quot;Name = ${params.Script}&quot;
+                  //  def pyFileExist = sh (
+            //            script: &apos;[ -f ./JMeter_Scripts/*.py ] &amp;&amp; echo &quot;true&quot; || echo &quot;false&quot;&apos;,
+             //           returnStdout: true
+              //      ).trim()
+
+                    def jmxFileExist = sh (
+                        script: &apos;[ -f ./JMeter_Scripts/*.jmx ] &amp;&amp; echo &quot;true&quot; || echo &quot;false&quot;&apos;,
+                        returnStdout: true
+                    ).trim()
+
+                    // echo &quot;${jmxFileExist} ${pyFileExist}&quot;
+
+                    if (jmxFileExist.equals(&quot;true&quot;)) {
+                        sh &apos;&apos;&apos;
+                         echo &quot;Setting up Load Test at : $(date)&quot;
+                         export MASTER_NAME=$(kubectl get pods -l app.kubernetes.io/component=master -o jsonpath=&apos;{.items[*].metadata.name}&apos;)
+                         export SERVER_IPS=$(kubectl get pods -l app.kubernetes.io/component=server -o jsonpath=&apos;{.items[*].status.podIP}&apos; | tr &apos; &apos; &apos;,&apos;)
+                         echo $MASTER_NAME
+                         echo $SERVER_IPS
+                         # Below jmx file should have influxDB details
+                         mv `ls ./JMeter_Scripts/*.jmx` ./JMeter_Scripts/test.jmx
+                         kubectl cp ./JMeter_Scripts/test.jmx $MASTER_NAME:/jmeter/ || true
+                         rm -f ./JMeter_Scripts/test.jmx
+                         kubectl exec -it $MASTER_NAME -- jmeter -n -t /jmeter/test.jmx -R $SERVER_IPS
+                         echo &quot;Load Test started at : $(date)&quot;
+                        &apos;&apos;&apos;
+                    }
+                    else {
+                        echo &quot;Test file not supported.&quot;
+                    }
+                }
+
+            }
+
+        }
+            /* else if(pyFileExist.equals(&quot;true&quot;)){
+
+                       //Push test file
+                       try{
+                       sh&quot;aws codecommit get-branch --repository-name photon --branch-name master;commitId=\$(aws codecommit get-branch --repository-name photon --branch-name master | grep -oP &apos;(?&lt;=\&quot;commitId\&quot;: \&quot;)[^\&quot;]*&apos;);echo \${commitId};aws codecommit put-file --repository-name photon --branch-name master --file-content file:///var/lib/jenkins/workspace/PHOTON_TestExecution/PHOTON_Setup/JMeter_Scripts/locustfile.py --file-path PHOTON_Setup/locust/locustfile.py --parent-commit-id \&quot;\${commitId}\&quot; --name \&quot;photonuser\&quot; --commit-message \&quot;Updated locust test run file\&quot;&quot;
+                       }
+                       catch(Exception e){
+                           echo &quot;Same locust test file already exists.&quot;
+                       }
+                       //sh &quot;rm -f *.py&quot;
+                       int slaves_number = Integer.parseInt(&quot;${params.Slave_Number}&quot;)-1;
+                       int runTimeInSeconds = Integer.parseInt(&quot;${params.Locust_Runtime}&quot;);
+                       //echo &quot;slaves : ${slaves_number}&quot;
+                       String standalone_conf = &quot;headless=true\nusers=${params.Locust_Users}\nspawn-rate=${params.Locust_Spawn_Rate}\nrun-time=${params.Locust_Runtime}s&quot;
+                       String master_conf = &quot;headless=true\nmaster=true\nexpect-workers=${slaves_number}\nusers=${params.Locust_Users}\nspawn-rate=${params.Locust_Spawn_Rate}\nrun-time=${params.Locust_Runtime}s&quot;
+                       String slaves_conf = &quot;headless=true\nworker=true\nmaster-host=Photon_Stack_locust-master&quot;
+
+                       // Push test run details
+                       // standalone test
+                       if (&quot;${params.Slave_Number}&quot; == &quot;1&quot;){
+
+                            try{
+
+                            sh&quot;aws codecommit get-branch --repository-name photon --branch-name master;commitId=\$(aws codecommit get-branch --repository-name photon --branch-name master | grep -oP &apos;(?&lt;=\&quot;commitId\&quot;: \&quot;)[^\&quot;]*&apos;);echo \${commitId};aws codecommit create-commit --repository-name photon --branch-name master --parent-commit-id \&quot;\${commitId}\&quot; --put-files \&quot;filePath=PHOTON_Setup/locust/TestConfigs/standalone.conf,fileContent=\&apos;${standalone_conf}\&apos;\&quot;&quot;
+                            sh&quot;rm -f /var/lib/jenkins/workspace/PHOTON_TestExecution/PHOTON_Setup/JMeter_Scripts/*.py&quot;
+                            }
+                            catch(Exception e){
+                                echo &quot;Same locust standalone configuration&quot;
+                            }
+
+                            sh &quot;docker service scale Photon_Stack_locust-standalone=1 &gt; /dev/null&quot;
+                            echo &quot;Test running for ${params.Runtime} seconds&quot;
+                            sleep(&quot;${runTimeInSeconds}&quot;);
+                            sh &quot;docker service scale Photon_Stack_locust-standalone=0 &gt; /dev/null&quot;
+                       }
+
+                       // distributed test
+                       else{
+
+                           try {
+                           // master.conf
+                           sh&quot;aws codecommit get-branch --repository-name photon --branch-name master;commitId=\$(aws codecommit get-branch --repository-name photon --branch-name master | grep -oP &apos;(?&lt;=\&quot;commitId\&quot;: \&quot;)[^\&quot;]*&apos;);echo \${commitId};aws codecommit create-commit --repository-name photon --branch-name master --parent-commit-id \&quot;\${commitId}\&quot; --put-files \&quot;filePath=PHOTON_Setup/locust/TestConfigs/master.conf,fileContent=\&apos;${master_conf}\&apos;\&quot;&quot;
+
+                           //slaves.conf
+                           sh&quot;aws codecommit get-branch --repository-name photon --branch-name master;commitId=\$(aws codecommit get-branch --repository-name photon --branch-name master | grep -oP &apos;(?&lt;=\&quot;commitId\&quot;: \&quot;)[^\&quot;]*&apos;);echo \${commitId};aws codecommit create-commit --repository-name photon --branch-name master --parent-commit-id \&quot;\${commitId}\&quot; --put-files \&quot;filePath=PHOTON_Setup/locust/TestConfigs/slaves.conf,fileContent=\&apos;${slaves_conf}\&apos;\&quot;&quot;
+
+
+                           }
+
+                           catch(Exception e){
+
+                               echo &quot;Same locust configuration&quot;
+                           }
+                           // scaling serivices
+                           sh &quot;docker service scale Photon_Stack_locust-master=1 Photon_Stack_locust-slave=\&quot;${slaves_number}\&quot; &gt; /dev/null&quot;
+
+                           echo &quot;Test running for ${params.Locust_Runtime} seconds&quot;
+                           sleep(&quot;${runTimeInSeconds}&quot;);
+                           sh &quot;docker service scale Photon_Stack_locust-master=0 Photon_Stack_locust-slave=0 &gt; /dev/null&quot;
+                       }
+
+
+                       sh &quot;rm -f /var/lib/jenkins/workspace/PHOTON_TestExecution/PHOTON_Setup/JMeter_Scripts/*.py&quot;
+
+                    }
+                    else {
+
+                        //fileExists(&apos;/var/lib/jenkins/workspace/PHOTON_TestExecution/locustfile.py&apos;)
+                        echo &quot;Test file not supported.&quot;
+                    }
+
+                }
+
+            }
+        }*/
+
+    stage(&apos;Scale Down JMeter pods back to default 1&apos;)
+        {
+            steps {
+                //echo &apos;starting job time : $(date)&apos;
+                      script{
+                            sh &apos;&apos;&apos;
+                            echo &quot;Starting the Scaling&quot;
+                            cd /var/lib/jenkins/framework-stack
+                            helm upgrade jmeter jmeter/ --set server.replicaCount=1
+                            sleep 10
+                            echo &quot;Scaling Down Completed&quot;
+                            &apos;&apos;&apos;
+                            }
+                    }
+        }
+
+    }
+
+    post {
+            aborted {
+                sh&apos;&apos;&apos;
+                echo &quot;Build was aborted&quot;;
+                &apos;&apos;&apos;
+            }
+        }
+}
+
+
+</script>
+    <sandbox>true</sandbox>
+  </definition>
+  <triggers/>
+  <disabled>false</disabled>
+</flow-definition>

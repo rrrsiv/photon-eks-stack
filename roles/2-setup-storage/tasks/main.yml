@@ -1,0 +1,15 @@
+# Maintainer: Shivam Mudotia (shivam.mudotia@nagarro.com)
+---
+# tasks file for setup storage
+
+- name: "Create Storage components"
+  block:
+    - import_tasks: s3.yml
+    - import_tasks: dynamodb.yml
+    - import_tasks: volume_influxdb.yml
+    - import_tasks: volume_grafana.yml
+    - import_tasks: volume_prometheus.yml
+    - meta: refresh_inventory
+    - pause:
+        seconds: 2
+

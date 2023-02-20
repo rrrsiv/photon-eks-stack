@@ -1,0 +1,37 @@
+# Default values for distributed-jmeter.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+master:
+  ## The number of pods in the master deployment
+  replicaCount: 1
+
+server:
+  ## The number of pods in the server deployment
+  replicaCount: 1
+
+image:
+  ## Specify an imagePullPolicy
+  pullPolicy: IfNotPresent
+
+  ## The repository and image
+  repository: "591438155357.dkr.ecr.us-east-1.amazonaws.com/distributed-jmeter"
+
+  ## The tag for the image
+  tag: 5.3
+
+resources:
+  limits:
+    cpu: 2000m
+    memory: 4Gi
+  requests:
+    cpu: 500m
+    memory: 4Gi
+
+# resources:
+#   limits:
+#     cpu: 100m
+#     memory: 512Mi
+#   requests:
+#     cpu: 100m
+#     memory: 512Mi

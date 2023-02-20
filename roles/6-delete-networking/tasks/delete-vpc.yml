@@ -1,0 +1,9 @@
+# Maintainer: Shivam Mudotia (shivam.mudotia@nagarro.com)
+- name: Delete VPC
+  ec2_vpc_net:
+    aws_access_key: "{{ aws_access_key }}"
+    aws_secret_key: "{{ aws_secret_key }}"
+    name: "{{ vpc_name }}-vpc" 
+    cidr_block: "{{ vpcCidrBlock }}"
+    region: "{{ region_name }}"
+    state: absent

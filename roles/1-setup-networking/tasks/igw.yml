@@ -1,0 +1,19 @@
+# Maintainer: Shivam Mudotia (shivam.mudotia@nagarro.com)
+- name: create vpc internet gateway       
+  ec2_vpc_igw:
+    aws_access_key: "{{ aws_access_key }}"
+    aws_secret_key: "{{ aws_secret_key }}"
+    vpc_id: "{{ aws_vpc.vpc.id }}"
+    region: "{{ region_name }}"
+    state: present
+    tags:
+      Name: "{{ vpc_name }}-igw"
+  register: aws_igw
+
+
+- name: Update the newly created IGW ID in framework-stack/terraform-eks/local.tf file
+  local_action: lineinfile 
+                path="framework-stack/terraform-eks/local.tf"
+                regexp='^  gateway_id'
+                line='  gateway_id = "{{ aws_igw.gateway_id }}"'
+  with_items: "{{ aws_igw.gateway_id }}"

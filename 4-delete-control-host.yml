@@ -1,0 +1,9 @@
+# Maintainer: Shivam Mudotia (shivam.mudotia@nagarro.com)
+# Delete control-host and SG
+- name: "Terminate control-host EC2 instance"
+  hosts: local
+  vars_files:
+    - ./vars/main.yml
+  gather_facts: False
+  roles:
+    - role: 4-delete-control-host
