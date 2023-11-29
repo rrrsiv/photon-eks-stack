@@ -1,4 +1,4 @@
-# Maintainer: Shivam Mudotia (shivam.mudotia@nagarro.com)
+# Maintainer: Sivakumar Ramani(sivakumar.ramani@nagarro.com)
 
 # This sets up control-host and installs following tools on it.
  - Python3
